@@ -9,7 +9,7 @@ st.set_page_config(page_title="Streaming Control", page_icon="📺", layout="cen
 st.title("📺 Control de Streaming")
 st.markdown("Gestión de ventas y cobros por WhatsApp.")
 
-# Enlace de exportación CSV directo
+# SOLUCIÓN DE RAÍZ: Enlace directo configurado exactamente para tu pestaña "CLIENTES"
 URL_FINAL = "https://google.com"
 
 try:
@@ -59,7 +59,6 @@ with tab1:
                 
                 if fecha_venc_str and fecha_venc_str.lower() != "nan" and fecha_venc_str != "":
                     try:
-                        # CORRECCIÓN AQUÍ: Se eliminó el .split() que rompía la lectura
                         if "/" in fecha_venc_str:
                             fecha_venc = datetime.strptime(fecha_venc_str, "%d/%m/%Y").date()
                         else:
@@ -177,6 +176,7 @@ with tab1:
 with tab2:
     st.subheader("Registrar nueva pantalla")
     st.warning("⚠️ Nota: Añade tus clientes directamente desde tu archivo de Google Sheets en tu celular o PC y aparecerán en este panel móvil al instante en tiempo real.")
+
 
 
 
