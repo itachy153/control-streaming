@@ -9,11 +9,10 @@ st.set_page_config(page_title="Streaming Control", page_icon="📺", layout="cen
 st.title("📺 Control de Streaming")
 st.markdown("Gestión de ventas y cobros por WhatsApp.")
 
-# EL ENLACE CORRECTO YA ESTÁ INTEGRADO AQUÍ ABAJO:
+# Enlace de exportación CSV directo
 URL_FINAL = "https://google.com"
 
 try:
-    # Leer el archivo CSV web de forma directa sin pasar por st.connection
     df = pd.read_csv(URL_FINAL, encoding='utf-8')
     df.columns = [str(c).upper().strip() for c in df.columns]
     error_conexion = False
@@ -21,7 +20,6 @@ except Exception as e:
     error_conexion = True
     df = pd.DataFrame(columns=["CLIENTE", "PLATAFORMA", "CUENTA", "VENCIMIENTO", "PRECIO", "MONEDA", "TELEFONO", "ESTADO"])
 
-# Asegurar que existan todas las columnas básicas para el negocio
 columnas_necesarias = ["CLIENTE", "PLATAFORMA", "CUENTA", "VENCIMIENTO", "PRECIO", "MONEDA", "TELEFONO", "ESTADO"]
 for col in columnas_necesarias:
     if col not in df.columns:
@@ -55,12 +53,13 @@ with tab1:
                 precios_numericos.append(p)
                 
                 fecha_venc_str = str(row['VENCIMIENTO']).strip()
-                dias_texto = "📅 Fecha lista"
+                dias_texto = ""
                 vencido = False
                 prioridad = 3
                 
                 if fecha_venc_str and fecha_venc_str.lower() != "nan" and fecha_venc_str != "":
                     try:
+                        # CORRECCIÓN AQUÍ: Se eliminó el .split() que rompía la lectura
                         if "/" in fecha_venc_str:
                             fecha_venc = datetime.strptime(fecha_venc_str, "%d/%m/%Y").date()
                         else:
