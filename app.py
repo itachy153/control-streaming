@@ -9,7 +9,7 @@ st.set_page_config(page_title="Streaming Control", page_icon="📺", layout="cen
 st.title("📺 Control de Streaming")
 st.markdown("Gestión de ventas y cobros por WhatsApp.")
 
-# SOLUCIÓN DE RAÍZ: Enlace directo configurado exactamente para tu pestaña "CLIENTES"
+# URL conector directo para tu pestaña CLIENTES
 URL_FINAL = "https://google.com"
 
 try:
@@ -39,6 +39,7 @@ with tab1:
             st.info("No hay registros activos en tu hoja de Google Sheets. Asegúrate de tener al menos una fila rellena debajo de los títulos.")
         else:
             df_validos["ESTADO_LIMPIO"] = df_validos["ESTADO"].astype(str).str.strip().str.lower()
+            df_validos["MONEDA_LIMPIA"] = df_validos["MONEDA"].astype(str).str.strip().str.upper().replace('NAN', 'USD')
             
             precios_numericos = []
             textos_dias = []
@@ -47,7 +48,8 @@ with tab1:
 
             for index, row in df_validos.iterrows():
                 try:
-                    p = float(str(row["PRECIO"]).replace(',', '.').strip())
+                    p_str = str(row["PRECIO"]).replace(',', '.').strip()
+                    p = float(p_str)
                 except:
                     p = 0.0
                 precios_numericos.append(p)
@@ -94,16 +96,23 @@ with tab1:
             df_validos["ALERTA_VENCIDO"] = alertas_vencido
             df_validos["PRIORIDAD"] = prioridades
 
-            # --- PANEL DE GANANCIAS ---
+            # --- MEJORA: PANEL DE GANANCIAS MULTIMONEDA ---
             st.subheader("📊 Resumen del Mes")
-            ganado = df_validos[~df_validos["ESTADO_LIMPIO"].str.contains("pendiente|vencido", na=False)]["PRECIO_NUM"].sum()
-            por_cobrar = df_validos[df_validos["ESTADO_LIMPIO"].str.contains("pendiente|vencido", na=False)]["PRECIO_NUM"].sum()
             
-            col_met1, col_met2 = st.columns(2)
-            with col_met1:
-                st.metric("💰 Dinero Cobrado", f"${ganado:.2f} USD")
-            with col_met2:
-                st.metric("🔴 Por Cobrar", f"${por_cobrar:.2f} USD")
+            # Obtener todas las monedas diferentes que usas en tu tabla
+            monedas_unicas = df_validos["MONEDA_LIMPIA"].unique()
+            
+            for mnd in monedas_unicas:
+                df_mnd = df_validos[df_validos["MONEDA_LIMPIA"] == mnd]
+                ganado_mnd = df_mnd[~df_mnd["ESTADO_LIMPIO"].str.contains("pendiente|vencido", na=False)]["PRECIO_NUM"].sum()
+                por_cobrar_mnd = df_mnd[df_mnd["ESTADO_LIMPIO"].str.contains("pendiente|vencido", na=False)]["PRECIO_NUM"].sum()
+                
+                st.markdown(f"**💰 Totales en {mnd}:**")
+                col_m1, col_m2 = st.columns(2)
+                with col_m1:
+                    st.metric("Cobrado", f"{ganado_mnd:.2f} {mnd}")
+                with col_m2:
+                    st.metric("Por Cobrar", f"{por_cobrar_mnd:.2f} {mnd}")
             
             st.divider()
 
@@ -143,7 +152,7 @@ with tab1:
                             else:
                                 st.markdown(f"<span style='color:#09ab3b; font-weight:bold;'>{row['TEXTO_DIAS']}</span>", unsafe_allow_html=True)
                             
-                            moneda_str = str(row['MONEDA']).replace('nan', '').replace('NaN', '').strip()
+                            moneda_str = str(row['MONEDA_LIMPIA'])
                             precio_str = str(row['PRECIO']).strip()
                             st.markdown(f"💰 **{precio_str} {moneda_str}**")
                         
@@ -151,7 +160,7 @@ with tab1:
                             if "pendiente" in str(row['ESTADO_LIMPIO']) or "vencido" in str(row['ESTADO_LIMPIO']):
                                 st.error("🔴 Pendiente")
                             else:
-                                st.success("🟢 Pagado")
+                                .success("🟢 Pagado")
                             
                             if row["ALERTA_VENCIDO"]:
                                 mensaje = f"Hola {cliente_nombre}, te escribo para recordarte que tu cuenta de {str(row['PLATAFORMA'])} ({str(row['CUENTA'])}) se encuentra vencida. El total a pagar para restablecer el servicio es de {precio_str} {moneda_str}. ¡Muchas gracias!"
