@@ -10,15 +10,15 @@ st.title("📺 Control de Streaming")
 st.markdown("Gestión de ventas y cobros por WhatsApp.")
 
 # URL de tu hoja de cálculo integrada
-URL_HOJA = "https://docs.google.com/spreadsheets/d/1lfQtU9F0lTWmKtu8aVbfF-krBrH1_MyMls4dmaNHgIk/edit?usp=sharing"
+URL_HOJA = "https://google.com"
 
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
-    # ttl="0" obliga a la app a leer los datos reales en cada recarga
     df = conn.read(spreadsheet=URL_HOJA, ttl="0")
+    # Forzar que todas las columnas leídas pasen a mayúsculas limpias
     df.columns = [str(c).upper().strip() for c in df.columns]
 except Exception as e:
-    st.error("Error al conectar con Google Sheets. Verifica que la hoja tenga permisos de Editor para cualquier persona con el enlace.")
+    st.error("Error al conectar con Google Sheets. Verifica los permisos.")
     df = pd.DataFrame(columns=["CLIENTE", "PLATAFORMA", "CUENTA", "VENCIMIENTO", "PRECIO", "TELEFONO", "ESTADO"])
 
 # Sistema de Pestañas
@@ -27,24 +27,21 @@ tab1, tab2 = st.tabs(["📊 Clientes y Cobros", "➕ Nueva Venta"])
 with tab1:
     st.subheader("Lista de Clientes")
     
-    if df.empty or df.iloc[0].isnull().all():
+    if df.empty or df.iloc.isnull().all().all():
         st.info("No hay registros activos en tu hoja de Google Sheets.")
     else:
-        # Filtro rápido para el celular
         filtro = st.selectbox("Filtrar por Estado:", ["Todos", "Pendiente", "Pagado"])
         
-        # Limpieza de espacios en blanco en la columna ESTADO para evitar fallos de filtrado
         df["ESTADO"] = df["ESTADO"].astype(str).str.strip()
         df_filtrado = df if filtro == "Todos" else df[df["ESTADO"].str.lower() == filtro.lower()]
         
-        # Generar tarjetas adaptables a pantallas chicas y grandes
         for index, row in df_filtrado.iterrows():
-            # Evita mostrar filas completamente vacías de la hoja
-            if pd.isna(row['CLIENTE']):
+            if pd.isna(row['CLIENTE']) or str(row['CLIENTE']).strip() == "":
                 continue
                 
             with st.container(border=True):
-                col_info, col_accion = st.columns()
+                # CORRECCIÓN: Se agrega el número 2 para indicar dos columnas
+                col_info, col_accion = st.columns(2)
                 
                 with col_info:
                     st.markdown(f"**👤 {row['CLIENTE']}**")
@@ -57,20 +54,21 @@ with tab1:
                         st.markdown(f"💰 **${row['PRECIO']}**")
                 
                 with col_accion:
-                    # Indicador visual de estado
-                    if str(row['ESTADO']).lower() == "pendiente":
+                    if str(row['ESTADO']).lower() == "pendiente" or str(row['ESTADO']).lower() == "vencido":
                         st.error("🔴 Pendiente")
                     else:
                         st.success("🟢 Pagado")
                     
-                    # Formatear mensaje para WhatsApp
                     mensaje = f"Hola {row['CLIENTE']}, te escribo para recordarte que tu cuenta de {row['PLATAFORMA']} ({row['CUENTA']}) vence el {row['VENCIMIENTO']}. El total a pagar es de ${row['PRECIO']}. ¡Muchas gracias!"
                     mensaje_web = urllib.parse.quote(mensaje)
                     
-                    # Link universal de WhatsApp (funciona en PC y Celular)
-                    url_ws = f"https://wa.me{int(float(row['TELEFONO'])) if str(row['TELEFONO']).replace('.','',1).isdigit() else row['TELEFONO']}?text={mensaje_web}"
+                    # Limpieza del teléfono para generar el enlace de WhatsApp
+                    tel_final = str(row['TELEFONO']).strip()
+                    if '.' in tel_final:
+                        tel_final = tel_final.split('.')[0]
                     
-                    # Botón llamativo para cobrar
+                    url_ws = f"https://wa.me{tel_final}?text={mensaje_web}"
+                    
                     st.markdown(
                         f'<a href="{url_ws}" target="_blank">'
                         f'<button style="width:100%; background-color:#25D366; color:white; '
@@ -85,20 +83,18 @@ with tab2:
     with st.form("formulario_venta", clear_on_submit=True):
         cliente_input = st.text_input("Nombre del Cliente *")
         plataforma_input = st.selectbox("Plataforma", ["Netflix", "Disney+", "Max", "Prime Video", "Spotify", "Magis TV", "Otro"])
-        cuenta_input = st.text_input("Perfil / Cuenta asignada (Ej: Perfil 3 - Clave123)")
+        cuenta_input = st.text_input("Perfil / Cuenta asignada")
         vencimiento_input = st.date_input("Fecha de Vencimiento")
         precio_input = st.number_input("Precio de venta ($)", min_value=0.0, step=0.5)
-        telefono_input = st.text_input("Teléfono del cliente *", help="Escribe el código de país sin el signo +. Ejemplo: 584123456789")
+        telefono_input = st.text_input("Teléfono del cliente *")
         estado_input = st.selectbox("Estado del pago", ["Pendiente", "Pagado"])
         
         guardar_boton = st.form_submit_button("💾 Registrar en Google Sheets")
         
         if guardar_boton:
             if cliente_input and telefono_input:
-                # Limpiar el teléfono de espacios o caracteres extraños
                 tel_limpio = "".join(filter(str.isdigit, telefono_input))
                 
-                # Crear la nueva fila de datos respetando las mayúsculas de tus columnas
                 nueva_fila = pd.DataFrame([{
                     "CLIENTE": cliente_input,
                     "PLATAFORMA": plataforma_input,
@@ -109,7 +105,6 @@ with tab2:
                     "ESTADO": estado_input
                 }])
                 
-                # Unir los datos viejos con los nuevos y subirlos
                 df_actualizado = pd.concat([df, nueva_fila], ignore_index=True)
                 conn.update(spreadsheet=URL_HOJA, data=df_actualizado)
                 
