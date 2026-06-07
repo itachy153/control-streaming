@@ -8,16 +8,16 @@ st.set_page_config(page_title="Streaming Control", page_icon="📺", layout="cen
 st.title("📺 Control de Streaming")
 st.markdown("Gestión de ventas y cobros por WhatsApp.")
 
-# URL de exportación directa de tu Google Sheet en formato CSV (Evita fallos de conexión)
+# URL de exportación directa de tu Google Sheet en formato CSV
 URL_CSV = "https://google.com"
 
 try:
-    # Leer directamente la hoja pública sin pasar por conectores complejos de Streamlit
+    # Leer la hoja de cálculo
     df = pd.read_csv(URL_CSV)
     # Forzar que todas las columnas leídas pasen a mayúsculas limpias
     df.columns = [str(c).upper().strip() for c in df.columns]
 except Exception as e:
-    st.error("Error al leer los datos de Google Sheets. Asegúrate de que la hoja esté compartida como 'Cualquier persona con el enlace' en modo Editor.")
+    st.error("Error al leer los datos de Google Sheets.")
     df = pd.DataFrame(columns=["CLIENTE", "PLATAFORMA", "CUENTA", "VENCIMIENTO", "PRECIO", "TELEFONO", "ESTADO"])
 
 # Sistema de Pestañas
@@ -26,7 +26,8 @@ tab1, tab2 = st.tabs(["📊 Clientes y Cobros", "➕ Nueva Venta"])
 with tab1:
     st.subheader("Lista de Clientes")
     
-    if df.empty or df.iloc.isnull().all().all():
+    # CORRECCIÓN: Se simplifica la validación para evitar el AttributeError
+    if df.empty:
         st.info("No hay registros activos en tu hoja de Google Sheets.")
     else:
         filtro = st.selectbox("Filtrar por Estado:", ["Todos", "Pendiente", "Pagado"])
@@ -54,7 +55,7 @@ with tab1:
                 
                 with col_accion:
                     estado_str = str(row['ESTADO']).lower()
-                    if "pendiente" in estado_str or "vencido" in estado_str or "vencido" in estado_str:
+                    if "pendiente" in estado_str or "vencido" in estado_str:
                         st.error("🔴 Pendiente")
                     else:
                         st.success("🟢 Pagado")
@@ -64,7 +65,10 @@ with tab1:
                     
                     # Limpieza estricta del número telefónico para evitar decimales (.0)
                     tel_sucio = str(row['TELEFONO']).strip()
-                    tel_final = tel_sucio.split('.')[0] if '.' in tel_sucio else tel_sucio
+                    if '.' in tel_sucio:
+                        tel_final = tel_sucio.split('.')[0]
+                    else:
+                        tel_final = tel_sucio
                     
                     url_ws = f"https://wa.me{tel_final}?text={mensaje_web}"
                     
@@ -79,4 +83,3 @@ with tab1:
 with tab2:
     st.subheader("Registrar nueva pantalla")
     st.warning("⚠️ Nota: Para registrar nuevos clientes desde este formulario móvil de forma directa, se requiere configurar la API avanzada de Google. Temporalmente, puedes añadir tus clientes directamente en tu aplicación de Google Sheets de tu celular y aparecerán aquí al instante.")
-
