@@ -96,10 +96,9 @@ with tab1:
             df_validos["ALERTA_VENCIDO"] = alertas_vencido
             df_validos["PRIORIDAD"] = prioridades
 
-            # --- MEJORA: PANEL DE GANANCIAS MULTIMONEDA ---
+            # --- PANEL DE GANANCIAS MULTIMONEDA ---
             st.subheader("📊 Resumen del Mes")
             
-            # Obtener todas las monedas diferentes que usas en tu tabla
             monedas_unicas = df_validos["MONEDA_LIMPIA"].unique()
             
             for mnd in monedas_unicas:
@@ -160,7 +159,8 @@ with tab1:
                             if "pendiente" in str(row['ESTADO_LIMPIO']) or "vencido" in str(row['ESTADO_LIMPIO']):
                                 st.error("🔴 Pendiente")
                             else:
-                                .success("🟢 Pagado")
+                                # CORRECCIÓN AQUÍ: Agregado st. de forma correcta
+                                st.success("🟢 Pagado")
                             
                             if row["ALERTA_VENCIDO"]:
                                 mensaje = f"Hola {cliente_nombre}, te escribo para recordarte que tu cuenta de {str(row['PLATAFORMA'])} ({str(row['CUENTA'])}) se encuentra vencida. El total a pagar para restablecer el servicio es de {precio_str} {moneda_str}. ¡Muchas gracias!"
@@ -185,6 +185,9 @@ with tab1:
 with tab2:
     st.subheader("Registrar nueva pantalla")
     st.warning("⚠️ Nota: Añade tus clientes directamente desde tu archivo de Google Sheets en tu celular o PC y aparecerán en este panel móvil al instante en tiempo real.")
+
+
+
 
 
 
