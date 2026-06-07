@@ -16,7 +16,7 @@ try:
     conn = st.connection("gsheets", type=GSheetsConnection)
     # ttl="0" obliga a la app a leer los datos reales en cada recarga
     df = conn.read(spreadsheet=URL_HOJA, ttl="0")
-        df.columns = [str(c).upper().strip() for c in df.columns]
+    df.columns = [str(c).upper().strip() for c in df.columns]
 except Exception as e:
     st.error("Error al conectar con Google Sheets. Verifica que la hoja tenga permisos de Editor para cualquier persona con el enlace.")
     df = pd.DataFrame(columns=["CLIENTE", "PLATAFORMA", "CUENTA", "VENCIMIENTO", "PRECIO", "TELEFONO", "ESTADO"])
