@@ -43,7 +43,6 @@ with tab1:
             # --- LÓGICA DE PROCESAMIENTO DE DATOS ---
             df_validos["ESTADO_LIMPIO"] = df_validos["ESTADO"].astype(str).str.strip().str.lower()
             
-            # Crear columnas auxiliares para cálculos matemáticos seguros
             precios_numericos = []
             dias_calculados = []
             alertas_vencido = []
@@ -80,11 +79,11 @@ with tab1:
                         elif dias_restantes == 0:
                             dias_texto = f"⚠️ ¡Vence HOY!"
                             vencido = True
-                            prioridad = 1 # Vence hoy va arriba
+                            prioridad = 1
                         else:
                             dias_texto = f"🚨 Vencido hace {abs(dias_restantes)} días"
                             vencido = True
-                            prioridad = 0 # Vencidos van de primeritos arriba
+                            prioridad = 0
                     except:
                         dias_texto = "📅 Fecha sin formato válido"
                 
@@ -92,7 +91,7 @@ with tab1:
                 estado_str = str(row['ESTADO_LIMPIO'])
                 if "pendiente" in estado_str or "vencido" in estado_str:
                     if prioridad > 1:
-                        prioridad = 2 # Pendientes no vencidos van al medio
+                        prioridad = 2
                 
                 dias_calculados.append(dias_restantes)
                 alertas_vencido.append(vencido)
@@ -106,7 +105,7 @@ with tab1:
             df_validos["TEXTO_DIAS"] = textos_dias
             df_validos["PRIORIDAD"] = prioridad_orden
 
-            # --- MEJORA 1: PANEL DE GANANCIAS ---
+            # --- PANEL DE GANANCIAS ---
             st.subheader("📊 Resumen del Mes")
             ganado = df_validos[~df_validos["ESTADO_LIMPIO"].str.contains("pendiente|vencido", na=False)]["PRECIO_NUM"].sum()
             por_cobrar = df_validos[df_validos["ESTADO_LIMPIO"].str.contains("pendiente|vencido", na=False)]["PRECIO_NUM"].sum()
@@ -135,7 +134,7 @@ with tab1:
             if busqueda:
                 df_filtrado = df_filtrado[df_filtrado["CLIENTE_LIMPIO"].str.lower().str.contains(busqueda, na=False)]
             
-            # MEJORA 2: Ordenar automáticamente (Vencidos -> Pendientes -> Pagados)
+            # Ordenar automáticamente (Vencidos -> Pendientes -> Pagados)
             df_filtrado = df_filtrado.sort_values(by="PRIORIDAD", ascending=True)
 
             if df_filtrado.empty:
@@ -181,9 +180,12 @@ with tab1:
                         
                         url_ws = f"https://wa.me{tel_limpio}?text={mensaje_web}"
                         
+                        # PARÉNTESIS CERRADO CORRECTAMENTE AQUÍ
                         st.markdown(
                             f'<a href="{url_ws}" target="_blank">'
                             f'<button style="width:100%; background-color:#25D366; color:white; '
+                            f'border:none; padding:10px; border-radius:8px; font-weight:bold; '
+                            f'cursor:pointer;">💬 Cobrar</button></a>', 
 
 
 
