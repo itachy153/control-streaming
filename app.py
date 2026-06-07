@@ -14,11 +14,17 @@ URL_CSV = "https://google.com"
 try:
     # Leer la hoja de cálculo
     df = pd.read_csv(URL_CSV)
-    # Forzar que todas las columnas leídas pasen a mayúsculas limpias
+    # LIMPIEZA TOTAL: Convertir columnas a mayúsculas, quitar espacios y caracteres raros
     df.columns = [str(c).upper().strip() for c in df.columns]
 except Exception as e:
     st.error("Error al leer los datos de Google Sheets.")
     df = pd.DataFrame(columns=["CLIENTE", "PLATAFORMA", "CUENTA", "VENCIMIENTO", "PRECIO", "TELEFONO", "ESTADO"])
+
+# SEGURIDAD: Si alguna columna falta por temas de formato de Google, la creamos vacía para evitar caídas
+columnas_necesarias = ["CLIENTE", "PLATAFORMA", "CUENTA", "VENCIMIENTO", "PRECIO", "TELEFONO", "ESTADO"]
+for col in columnas_necesarias:
+    if col not in df.columns:
+        df[col] = ""
 
 # Sistema de Pestañas
 tab1, tab2 = st.tabs(["📊 Clientes y Cobros", "➕ Nueva Venta"])
@@ -26,18 +32,18 @@ tab1, tab2 = st.tabs(["📊 Clientes y Cobros", "➕ Nueva Venta"])
 with tab1:
     st.subheader("Lista de Clientes")
     
-    # CORRECCIÓN: Se simplifica la validación para evitar el AttributeError
-    if df.empty:
+    if df.empty or df["CLIENTE"].dropna().str.strip().eq("").all():
         st.info("No hay registros activos en tu hoja de Google Sheets.")
     else:
         filtro = st.selectbox("Filtrar por Estado:", ["Todos", "Pendiente", "Pagado"])
         
-        # Convertir columna ESTADO a texto limpio
+        # Convertir columna ESTADO a texto limpio de forma segura
         df["ESTADO"] = df["ESTADO"].astype(str).str.strip()
         df_filtrado = df if filtro == "Todos" else df[df["ESTADO"].str.lower() == filtro.lower()]
         
         for index, row in df_filtrado.iterrows():
-            if pd.isna(row['CLIENTE']) or str(row['CLIENTE']).strip() == "":
+            # Saltar filas vacías
+            if pd.isna(row['CLIENTE']) or str(row['CLIENTE']).strip() == "" or str(row['CLIENTE']).strip().lower() == "nan":
                 continue
                 
             with st.container(border=True):
@@ -55,7 +61,7 @@ with tab1:
                 
                 with col_accion:
                     estado_str = str(row['ESTADO']).lower()
-                    if "pendiente" in estado_str or "vencido" in estado_str:
+                    if "pendiente" in estado_str or "vencido" in estado_str or estado_str == "nan" or estado_str == "":
                         st.error("🔴 Pendiente")
                     else:
                         st.success("🟢 Pagado")
@@ -82,4 +88,5 @@ with tab1:
 
 with tab2:
     st.subheader("Registrar nueva pantalla")
-    st.warning("⚠️ Nota: Para registrar nuevos clientes desde este formulario móvil de forma directa, se requiere configurar la API avanzada de Google. Temporalmente, puedes añadir tus clientes directamente en tu aplicación de Google Sheets de tu celular y aparecerán aquí al instante.")
+    st.warning("⚠️ Nota: Puedes añadir tus clientes directamente desde la aplicación de Google Sheets en tu celular o PC, y aparecerán en este panel móvil de inmediato en tiempo real.")
+
