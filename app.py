@@ -12,8 +12,15 @@ st.markdown("Gestión de ventas y cobros por WhatsApp.")
 URL_CSV = "https://google.com"
 
 try:
-    # Leer la hoja de cálculo
-    df = pd.read_csv(URL_CSV)
+    # AJUSTE LATAM: Intentamos leer primero con punto y coma (;) que es el estándar de Google en la región
+    try:
+        df = pd.read_csv(URL_CSV, sep=';')
+        # Si leyó mal y solo creó una columna, reintentamos con coma (,) tradicional
+        if len(df.columns) <= 1:
+            df = pd.read_csv(URL_CSV, sep=',')
+    except:
+        df = pd.read_csv(URL_CSV, sep=',')
+        
     # LIMPIEZA TOTAL: Convertir columnas a mayúsculas, quitar espacios y caracteres raros
     df.columns = [str(c).upper().strip() for c in df.columns]
 except Exception as e:
@@ -32,8 +39,9 @@ tab1, tab2 = st.tabs(["📊 Clientes y Cobros", "➕ Nueva Venta"])
 with tab1:
     st.subheader("Lista de Clientes")
     
+    # Comprobar si hay datos reales
     if df.empty or df["CLIENTE"].dropna().str.strip().eq("").all():
-        st.info("No hay registros activos en tu hoja de Google Sheets.")
+        st.info("No hay registros activos en tu hoja de Google Sheets. Asegúrate de tener al menos una fila rellena debajo de los títulos.")
     else:
         filtro = st.selectbox("Filtrar por Estado:", ["Todos", "Pendiente", "Pagado"])
         
@@ -54,13 +62,13 @@ with tab1:
                     st.caption(f"🎬 {row['PLATAFORMA']} | 🔑 {row['CUENTA']}")
                     st.text(f"📅 Vence: {row['VENCIMIENTO']}")
                     try:
-                        precio_val = float(row['PRECIO'])
+                        precio_val = float(str(row['PRECIO']).replace(',', '.'))
                         st.markdown(f"💰 **${precio_val:.2f}**")
                     except:
                         st.markdown(f"💰 **${row['PRECIO']}**")
                 
                 with col_accion:
-                    estado_str = str(row['ESTADO']).lower()
+                    estado_str = str(row['ESTADO']).lower().strip()
                     if "pendiente" in estado_str or "vencido" in estado_str or estado_str == "nan" or estado_str == "":
                         st.error("🔴 Pendiente")
                     else:
@@ -89,4 +97,5 @@ with tab1:
 with tab2:
     st.subheader("Registrar nueva pantalla")
     st.warning("⚠️ Nota: Puedes añadir tus clientes directamente desde la aplicación de Google Sheets en tu celular o PC, y aparecerán en este panel móvil de inmediato en tiempo real.")
+
 
