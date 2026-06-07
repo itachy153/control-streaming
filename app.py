@@ -9,12 +9,12 @@ st.set_page_config(page_title="Streaming Control", page_icon="📺", layout="cen
 st.title("📺 Control de Streaming")
 st.markdown("Gestión de ventas y cobros por WhatsApp.")
 
-# Enlace de exportación de Google corregido
-URL_DIRECTA = "https://google.com"
+# SOLUCIÓN FINAL: Enlace de publicación abierta oficial (Inmune a bloqueos de exportación)
+URL_INMUNE_FINAL = "https://google.com"
 
 try:
-    # ELIMINADO st.connection: Leemos como un archivo web directo para evitar errores de Google
-    df = pd.read_csv(URL_DIRECTA, sep=None, engine='python', encoding='utf-8')
+    # Leer el archivo publicado directamente de la web de Google sin pasar por la API de exportación
+    df = pd.read_csv(URL_INMUNE_FINAL, sep=None, engine='python', encoding='utf-8')
     df.columns = [str(c).upper().strip() for c in df.columns]
     error_conexion = False
 except Exception as e:
@@ -34,7 +34,7 @@ with tab1:
     st.subheader("Lista de Clientes")
     
     if error_conexion:
-        st.error("Error al conectar con la base de datos de Google Sheets. Asegúrate de que la hoja esté compartida de forma pública.")
+        st.error("Error al conectar con la base de datos de Google Sheets. Asegúrate de que la hoja esté compartida de forma pública y publicada en la web.")
     else:
         df["CLIENTE_LIMPIO"] = df["CLIENTE"].astype(str).str.strip()
         df_validos = df[(df["CLIENTE_LIMPIO"] != "") & (df["CLIENTE_LIMPIO"].str.lower() != "nan") & (df["CLIENTE_LIMPIO"].str.lower() != "none")]
