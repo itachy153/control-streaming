@@ -8,16 +8,16 @@ st.set_page_config(page_title="Streaming Control", page_icon="📺", layout="cen
 st.title("📺 Control de Streaming")
 st.markdown("Gestión de ventas y cobros por WhatsApp.")
 
-# Enlace de descarga directa en formato Excel (Indestructible ante bloqueos de CSV)
-URL_EXCEL = "https://google.com"
+# Enlace de exportación limpia oficial de Google (No se bloquea nunca si está en Editor)
+URL_FINAL = "https://google.com"
 
 try:
-    # Leer la hoja directamente como un archivo Excel de la nube
-    df = pd.read_excel(URL_EXCEL)
+    # Leer la hoja directamente como CSV web
+    df = pd.read_csv(URL_FINAL)
     # Convertir todas las columnas encontradas a mayúsculas limpias sin espacios
     df.columns = [str(c).upper().strip() for c in df.columns]
 except Exception as e:
-    st.error("Error al leer el archivo Excel de Google Sheets. Asegúrate de que esté compartido como 'Cualquier persona con el enlace' en modo Editor.")
+    st.error(f"Error al conectar con la base de datos de Google Sheets.")
     df = pd.DataFrame(columns=["CLIENTE", "PLATAFORMA", "CUENTA", "VENCIMIENTO", "PRECIO", "MONEDA", "TELEFONO", "ESTADO"])
 
 # Garantizar que existan todas las columnas necesarias para el negocio
@@ -78,7 +78,7 @@ with tab1:
                     mensaje = f"Hola {cliente_nombre}, te escribo para recordarte que tu cuenta de {str(row['PLATAFORMA'])} ({str(row['CUENTA'])}) vence el {str(row['VENCIMIENTO'])}. El total a pagar es de {str(row['PRECIO'])} {moneda_str}. ¡Muchas gracias!"
                     mensaje_web = urllib.parse.quote(mensaje)
                     
-                    # Limpieza total del teléfono eliminando decimales (.0) automáticos de Excel
+                    # Limpieza total del teléfono
                     tel_sucio = str(row['TELEFONO']).strip()
                     if '.' in tel_sucio:
                         tel_sucio = tel_sucio.split('.')[0]
@@ -97,6 +97,5 @@ with tab1:
 with tab2:
     st.subheader("Registrar nueva pantalla")
     st.warning("⚠️ Nota: Añade tus clientes directamente desde la aplicación de Google Sheets en tu celular o PC y aparecerán en este panel móvil al instante en tiempo real.")
-
 
 
