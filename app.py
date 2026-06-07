@@ -10,8 +10,7 @@ st.title("📺 Control de Streaming")
 st.markdown("Gestión de ventas y cobros por WhatsApp.")
 
 # SOLUCIÓN DE ENLACE: Cambiado a /export?format=csv para que descargue la tabla real sin bloquearse
-URL_PUBLICACION = "https://docs.google.com/spreadsheets/d/1lfQtU9F0lTWmKtu8aVbfF-krBrH1_MyMls4dmaNHgIk/edit?usp=sharing"
-
+URL_PUBLICACION = "https://google.com"
 
 try:
     # Leer la tabla directamente desde los servidores de Google usando el motor Python
@@ -177,6 +176,7 @@ with tab1:
                             
                             # Limpieza estricta de teléfono para el link universal de WhatsApp
 
+          
 
 
 
