@@ -9,7 +9,7 @@ st.title("📺 Control de Streaming")
 st.markdown("Gestión de ventas y cobros por WhatsApp.")
 
 # Enlace de publicación directa (Ignora el error de pestañas y gid=0)
-URL_PUBLICACION = "https://google.com"
+URL_PUBLICACION = "https://docs.google.com/spreadsheets/d/1lfQtU9F0lTWmKtu8aVbfF-krBrH1_MyMls4dmaNHgIk/edit?usp=sharing"
 
 try:
     # Leer directamente la tabla sin parámetros de consulta que bloqueen a Google
