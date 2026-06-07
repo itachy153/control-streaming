@@ -1,5 +1,4 @@
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 import urllib.parse
 
@@ -9,16 +8,16 @@ st.set_page_config(page_title="Streaming Control", page_icon="📺", layout="cen
 st.title("📺 Control de Streaming")
 st.markdown("Gestión de ventas y cobros por WhatsApp.")
 
-# URL de tu hoja de cálculo integrada
-URL_HOJA = "https://google.com"
+# URL de exportación directa de tu Google Sheet en formato CSV (Evita fallos de conexión)
+URL_CSV = "https://google.com"
 
 try:
-    conn = st.connection("gsheets", type=GSheetsConnection)
-    df = conn.read(spreadsheet=URL_HOJA, ttl="0")
+    # Leer directamente la hoja pública sin pasar por conectores complejos de Streamlit
+    df = pd.read_csv(URL_CSV)
     # Forzar que todas las columnas leídas pasen a mayúsculas limpias
     df.columns = [str(c).upper().strip() for c in df.columns]
 except Exception as e:
-    st.error("Error al conectar con Google Sheets. Verifica los permisos.")
+    st.error("Error al leer los datos de Google Sheets. Asegúrate de que la hoja esté compartida como 'Cualquier persona con el enlace' en modo Editor.")
     df = pd.DataFrame(columns=["CLIENTE", "PLATAFORMA", "CUENTA", "VENCIMIENTO", "PRECIO", "TELEFONO", "ESTADO"])
 
 # Sistema de Pestañas
@@ -32,6 +31,7 @@ with tab1:
     else:
         filtro = st.selectbox("Filtrar por Estado:", ["Todos", "Pendiente", "Pagado"])
         
+        # Convertir columna ESTADO a texto limpio
         df["ESTADO"] = df["ESTADO"].astype(str).str.strip()
         df_filtrado = df if filtro == "Todos" else df[df["ESTADO"].str.lower() == filtro.lower()]
         
@@ -40,7 +40,6 @@ with tab1:
                 continue
                 
             with st.container(border=True):
-                # CORRECCIÓN: Se agrega el número 2 para indicar dos columnas
                 col_info, col_accion = st.columns(2)
                 
                 with col_info:
@@ -54,7 +53,8 @@ with tab1:
                         st.markdown(f"💰 **${row['PRECIO']}**")
                 
                 with col_accion:
-                    if str(row['ESTADO']).lower() == "pendiente" or str(row['ESTADO']).lower() == "vencido":
+                    estado_str = str(row['ESTADO']).lower()
+                    if "pendiente" in estado_str or "vencido" in estado_str or "vencido" in estado_str:
                         st.error("🔴 Pendiente")
                     else:
                         st.success("🟢 Pagado")
@@ -62,10 +62,9 @@ with tab1:
                     mensaje = f"Hola {row['CLIENTE']}, te escribo para recordarte que tu cuenta de {row['PLATAFORMA']} ({row['CUENTA']}) vence el {row['VENCIMIENTO']}. El total a pagar es de ${row['PRECIO']}. ¡Muchas gracias!"
                     mensaje_web = urllib.parse.quote(mensaje)
                     
-                    # Limpieza del teléfono para generar el enlace de WhatsApp
-                    tel_final = str(row['TELEFONO']).strip()
-                    if '.' in tel_final:
-                        tel_final = tel_final.split('.')[0]
+                    # Limpieza estricta del número telefónico para evitar decimales (.0)
+                    tel_sucio = str(row['TELEFONO']).strip()
+                    tel_final = tel_sucio.split('.')[0] if '.' in tel_sucio else tel_sucio
                     
                     url_ws = f"https://wa.me{tel_final}?text={mensaje_web}"
                     
@@ -79,36 +78,5 @@ with tab1:
 
 with tab2:
     st.subheader("Registrar nueva pantalla")
-    
-    with st.form("formulario_venta", clear_on_submit=True):
-        cliente_input = st.text_input("Nombre del Cliente *")
-        plataforma_input = st.selectbox("Plataforma", ["Netflix", "Disney+", "Max", "Prime Video", "Spotify", "Magis TV", "Otro"])
-        cuenta_input = st.text_input("Perfil / Cuenta asignada")
-        vencimiento_input = st.date_input("Fecha de Vencimiento")
-        precio_input = st.number_input("Precio de venta ($)", min_value=0.0, step=0.5)
-        telefono_input = st.text_input("Teléfono del cliente *")
-        estado_input = st.selectbox("Estado del pago", ["Pendiente", "Pagado"])
-        
-        guardar_boton = st.form_submit_button("💾 Registrar en Google Sheets")
-        
-        if guardar_boton:
-            if cliente_input and telefono_input:
-                tel_limpio = "".join(filter(str.isdigit, telefono_input))
-                
-                nueva_fila = pd.DataFrame([{
-                    "CLIENTE": cliente_input,
-                    "PLATAFORMA": plataforma_input,
-                    "CUENTA": cuenta_input,
-                    "VENCIMIENTO": str(vencimiento_input),
-                    "PRECIO": precio_input,
-                    "TELEFONO": tel_limpio,
-                    "ESTADO": estado_input
-                }])
-                
-                df_actualizado = pd.concat([df, nueva_fila], ignore_index=True)
-                conn.update(spreadsheet=URL_HOJA, data=df_actualizado)
-                
-                st.success(f"¡Venta de {cliente_input} guardada con éxito!")
-                st.rerun()
-            else:
-                st.error("Por favor completa los campos obligatorios (*).")
+    st.warning("⚠️ Nota: Para registrar nuevos clientes desde este formulario móvil de forma directa, se requiere configurar la API avanzada de Google. Temporalmente, puedes añadir tus clientes directamente en tu aplicación de Google Sheets de tu celular y aparecerán aquí al instante.")
+
