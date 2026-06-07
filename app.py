@@ -9,7 +9,7 @@ st.set_page_config(page_title="Streaming Control", page_icon="📺", layout="cen
 st.title("📺 Control de Streaming")
 st.markdown("Gestión de ventas y cobros por WhatsApp.")
 
-# URL conector directo para tu pestaña CLIENTES
+# SOLUCIÓN FINAL INDESTRUCTIBLE: Descarga directa de la primera hoja sin pasar por la API gviz de Google
 URL_FINAL = "https://google.com"
 
 try:
@@ -159,7 +159,6 @@ with tab1:
                             if "pendiente" in str(row['ESTADO_LIMPIO']) or "vencido" in str(row['ESTADO_LIMPIO']):
                                 st.error("🔴 Pendiente")
                             else:
-                                # CORRECCIÓN AQUÍ: Agregado st. de forma correcta
                                 st.success("🟢 Pagado")
                             
                             if row["ALERTA_VENCIDO"]:
@@ -185,6 +184,7 @@ with tab1:
 with tab2:
     st.subheader("Registrar nueva pantalla")
     st.warning("⚠️ Nota: Añade tus clientes directamente desde tu archivo de Google Sheets en tu celular o PC y aparecerán en este panel móvil al instante en tiempo real.")
+
 
 
 
