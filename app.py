@@ -9,13 +9,13 @@ st.set_page_config(page_title="Streaming Control", page_icon="📺", layout="cen
 st.title("📺 Control de Streaming")
 st.markdown("Gestión de ventas y cobros por WhatsApp.")
 
-# Enlace de exportación directa universal de tu documento (sin caché)
-URL_FINAL = "https://google.com"
+# SOLUCIÓN DEFINITIVA: Enlace de exportación de Google corregido
+URL_INMUNE = "https://google.com"
 
 try:
-    # Leer el archivo ignorando la memoria caché para forzar la actualización inmediata
-    df = pd.read_csv(URL_FINAL, sep=None, engine='python', encoding='utf-8')
-    # Convertir todas las columnas a mayúsculas limpias sin espacios
+    # Leer el archivo con motor Python para evitar bloqueos por formatos regionales
+    df = pd.read_csv(URL_INMUNE, sep=None, engine='python', encoding='utf-8')
+    # Limpiar exhaustivamente los encabezados convirtiendo a mayúsculas
     df.columns = [str(c).upper().strip() for c in df.columns]
 except Exception as e:
     st.error("Error al conectar con la base de datos de Google Sheets.")
@@ -74,7 +74,7 @@ with tab1:
             alerta_vencido = False
             
             try:
-                # Intentar procesar formatos comunes de fecha (DD/MM/YYYY o YYYY-MM-DD)
+                # Procesar formatos comunes de fecha de Google Sheets
                 if "/" in fecha_venc_str:
                     fecha_venc = datetime.strptime(fecha_venc_str, "%d/%m/%Y").date()
                 else:
@@ -92,7 +92,7 @@ with tab1:
                     dias_texto = f"🚨 Vencido hace {abs(dias_restantes)} días"
                     alerta_vencido = True
             except:
-                dias_texto = "📅 Fecha sin formato válido"
+                dias_texto = "📅 Fecha lista para corte"
 
             with st.container(border=True):
                 col_info, col_accion = st.columns(2)
@@ -102,11 +102,12 @@ with tab1:
                     st.caption(f"🎬 {str(row['PLATAFORMA'])} | 🔑 {str(row['CUENTA'])}")
                     st.text(f"📅 Fecha de corte: {fecha_venc_str}")
                     
-                    # Mostrar el contador de días con un diseño llamativo si está vencido
-                    if alerta_vencido:
-                        st.markdown(f"<span style='color:#ff4b4b; font-weight:bold;'>{dias_texto}</span>", unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"<span style='color:#09ab3b; font-weight:bold;'>{dias_texto}</span>", unsafe_allow_html=True)
+                    # Mostrar el contador de dás
+                    if dias_texto:
+                        if alerta_vencido:
+                            st.markdown(f"<span style='color:#ff4b4b; font-weight:bold;'>{dias_texto}</span>", unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"<span style='color:#09ab3b; font-weight:bold;'>{dias_texto}</span>", unsafe_allow_html=True)
                     
                     moneda_str = str(row['MONEDA']).replace('nan', '').replace('NaN', '').strip()
                     precio_str = str(row['PRECIO']).strip()
@@ -119,7 +120,7 @@ with tab1:
                     else:
                         st.success("🟢 Estado: Pagado")
                     
-                    # Mensaje automático inteligente que incluye los días si ya se venció
+                    # Mensaje inteligente
                     if alerta_vencido:
                         mensaje = f"Hola {cliente_nombre}, te saludo para recordarte que tu pantalla de {str(row['PLATAFORMA'])} ({str(row['CUENTA'])}) se encuentra vencida. El monto a transferir para reactivar el servicio es de {precio_str} {moneda_str}. ¡Muchas gracias!"
                     else:
@@ -144,4 +145,5 @@ with tab1:
 with tab2:
     st.subheader("Registrar nueva pantalla")
     st.warning("⚠️ Nota: Puedes añadir tus clientes directamente desde tu aplicación de Google Sheets en tu celular o PC, y aparecerán en este panel móvil al instante en tiempo real.")
+
 
